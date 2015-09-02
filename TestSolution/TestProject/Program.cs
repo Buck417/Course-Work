@@ -10,6 +10,8 @@ namespace TestProject
     {
         static void Main(string[] args)
         {
+            int x = new int();
+            x = 5;
         }
     }
 }
