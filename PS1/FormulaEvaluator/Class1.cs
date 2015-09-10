@@ -25,11 +25,50 @@ namespace FormulaEvaluator{
 /// <returns>Returns an int value of the solved formula. </returns>
       public static int Evaluate(String exp, Lookup variableEvaluator){
         Stack<int> numbers = new Stack<int>();
-        Stack<char> operators = new Stack<char>();
+        Stack<String> operators = new Stack<String>();
         String[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+        int val;
+
+        for (int i = 0; i < substrings.Length; i++)
+        {
+            String instance = substrings[i];
+            int length = substrings[i].Length;
+            if (substrings[i] == " ")
+            {
+                
+                i++;
+            }
+            if(instance == "*" || instance == "+" || instance == "(" || instance == "-" || instance == "/"){
+                operators.Push(instance);
+            }
+            if (int.TryParse(instance, out val))
+            {
+                numbers.Push(val);
+            }
+            if(length > 1){
+
+            }
+        }
         int x = 0;
         return x;
       }
+
+      public static Boolean Variable(String substringGiven)
+      {
+          String[] varSubString;
+          string[] stringSeparators = new string[] {""};
+          varSubString = substringGiven.Split(stringSeparators, StringSplitOptions.None);
+          int val;
+          if (Regex.IsMatch(substringGiven, @"^[a-zA-Z0-9]+$")){
+              if((Regex.IsMatch(varSubString[0], @"^[a-zA-Z]+$") && (int.TryParse(varSubString[varSubString.Length], out val)){
+                  return true;
+              }
+          }
+          
+
+              return false;
+      }
+
 }
 
 }
