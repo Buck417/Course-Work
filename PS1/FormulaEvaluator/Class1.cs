@@ -15,7 +15,11 @@ namespace FormulaEvaluator
 
     public static class Evaluator
     {
-
+        /// <summary>
+        /// Delegate that uses the Lookup library to return a value when given a String.
+        /// </summary>
+        /// <param name="v">The string given to delegate used to determine the value</param>
+        /// <returns></returns>
         public delegate int Lookup(String v);
 
         /// <summary>
