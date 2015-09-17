@@ -184,6 +184,30 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
+            if (dependents.ContainsKey(s))
+            {
+                HashSet<String> tempDependents;
+                dependents.TryGetValue(s, out tempDependents);
+
+                String[] dependentsToArray = tempDependents.ToArray();
+
+                foreach (String sameDependents in dependentsToArray)
+                {
+                    RemoveDependency(s, sameDependents);
+                }
+
+                 foreach (String newPair in newDependents)
+                {
+                    AddDependency(newPair, s);
+                }   
+            }
+            else
+            {
+                foreach (String newPair in newDependents)
+                {
+                    AddDependency(s, newPair);
+                }   
+            }
         }
 
 
@@ -193,6 +217,30 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependees(string s, IEnumerable<string> newDependees)
         {
+            if (dependees.ContainsKey(s))
+            {
+                HashSet<String> tempDependees;
+                dependees.TryGetValue(s, out tempDependees);
+
+                String[] dependeesToArray = tempDependees.ToArray();
+
+                foreach (String sameDependees in dependeesToArray)
+                {
+                    RemoveDependency(sameDependees, s);
+                }
+
+                foreach (String newPair in newDependees)
+                {
+                    AddDependency(newPair, s);
+                }
+            }
+            else
+            {
+                foreach (String newPair in newDependees)
+                {
+                    AddDependency(s, newPair);
+                }
+            }
         }
 
     }
