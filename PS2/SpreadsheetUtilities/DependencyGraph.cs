@@ -76,7 +76,9 @@ namespace SpreadsheetUtilities
                 {
                     return 0;
                 }
-                return 0;
+                HashSet<String> tempDependees;
+                dependees.TryGetValue(s, out tempDependees);
+                return tempDependees.Count;
 
             }
         }
@@ -87,6 +89,17 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependents(string s)
         {
+            if(dependents.ContainsKey(s))
+            {
+                HashSet<String> tempDependents;
+                dependents.TryGetValue(s, out tempDependents);
+
+                if (tempDependents.Count == 0)
+                    return false;
+
+                return true;
+            }
+
             return false;
         }
 
@@ -96,6 +109,17 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependees(string s)
         {
+            if (dependees.ContainsKey(s))
+            {
+                HashSet<String> tempDependees;
+                dependees.TryGetValue(s, out tempDependees);
+
+                if (tempDependees.Count == 0)
+                    return false;
+
+                return true;
+            }
+
             return false;
         }
 
@@ -105,6 +129,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
+            if (dependents.ContainsKey(s))
+            {
+                HashSet<String> tempDependents;
+                dependents.TryGetValue(s, out tempDependents);
+                return tempDependents;
+            }
             return null;
         }
 
@@ -113,6 +143,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
+            if (dependents.ContainsKey(s))
+            {
+                HashSet<String> tempDependees;
+                dependees.TryGetValue(s, out tempDependees);
+                return tempDependees;
+            }
             return null;
         }
 
