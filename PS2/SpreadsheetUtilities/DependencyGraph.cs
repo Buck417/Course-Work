@@ -165,6 +165,62 @@ namespace SpreadsheetUtilities
         /// <param name="t"> t must be evaluated first.  S depends on T</param>
         public void AddDependency(string s, string t)
         {
+            HashSet<String> tempDependents;
+            HashSet<String> tempDependees;
+            if (dependents.ContainsKey(s))
+            {  
+                dependents.TryGetValue(s, out tempDependents);
+
+                if (!tempDependents.Contains(t))
+                {
+                    tempDependents.Add(t);
+
+                    if (!dependents.ContainsKey(t))
+                    {
+                        dependents.Add(t, new HashSet<string>());
+                    }
+                    if (dependees.ContainsKey(t))
+                    {
+                        dependees.TryGetValue(s, out tempDependees);
+                        tempDependees.Add(s);
+                    }
+                    else
+                    {
+                        tempDependees = new HashSet<string>();
+                        tempDependees.Add(s);
+                        dependees.Add(t, tempDependees);
+                    }
+                    size++;
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                tempDependents = new HashSet<string>();
+                tempDependents.Add(t);
+                dependents.Add(s, tempDependents);
+                dependees.Add(s, new HashSet<string>());
+
+                if (!dependents.ContainsKey(t))
+                {
+                    dependees.Add(t, new HashSet<string>());
+                }
+                if (dependees.ContainsKey(t))
+                {
+                    dependees.TryGetValue(t, out tempDependents);
+                    tempDependents.Add(s);
+                }
+                else
+                {
+                    tempDependees = new HashSet<string>();
+                    tempDependees.Add(s);
+                    dependees.Add(t, tempDependees);
+                }
+                size++;
+            }
         }
 
 
