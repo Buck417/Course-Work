@@ -37,9 +37,9 @@ namespace SpreadsheetUtilities
     /// </summary>
     public class DependencyGraph
     {
-        Dictionary<String, HashSet<String>> dependees;
-        Dictionary<String, HashSet<String>> dependents;
-        int size;
+       private Dictionary<String, HashSet<String>> dependees;
+       private Dictionary<String, HashSet<String>> dependents;
+       private int size;
 
         /// <summary>
         /// Creates an empty DependencyGraph.
@@ -160,12 +160,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            if (dependents.ContainsKey(s))
+            if (dependees.ContainsKey(s))
             {
                 HashSet<String> tempDependees;
                 dependees.TryGetValue(s, out tempDependees);
                 foreach(String dependee in tempDependees){
-                    if(dependees != null)
+                    if(dependee != null)
                         yield return dependee;
                 }
             }
@@ -185,15 +185,14 @@ namespace SpreadsheetUtilities
         /// <param name="t"> t must be evaluated first.  S depends on T</param>
         public void AddDependency(string s, string t)
         {
-            HashSet<String> tempDependents;
-            HashSet<String> tempDependees;
+            HashSet<String> tempSet;
             if (dependents.ContainsKey(s))
             {  
-                dependents.TryGetValue(s, out tempDependents);
+                dependents.TryGetValue(s, out tempSet);
 
-                if (!tempDependents.Contains(t))
+                if (!tempSet.Contains(t))
                 {
-                    tempDependents.Add(t);
+                    tempSet.Add(t);
 
                     if (!dependents.ContainsKey(t))
                     {
@@ -201,14 +200,14 @@ namespace SpreadsheetUtilities
                     }
                     if (dependees.ContainsKey(t))
                     {
-                        dependees.TryGetValue(s, out tempDependees);
-                        tempDependees.Add(s);
+                        dependees.TryGetValue(t, out tempSet);
+                        tempSet.Add(s);
                     }
                     else
                     {
-                        tempDependees = new HashSet<string>();
-                        tempDependees.Add(s);
-                        dependees.Add(t, tempDependees);
+                        tempSet = new HashSet<string>();
+                        tempSet.Add(s);
+                        dependees.Add(t, tempSet);
                     }
                     size++;
                 }
@@ -219,25 +218,25 @@ namespace SpreadsheetUtilities
             }
             else
             {
-                tempDependents = new HashSet<string>();
-                tempDependents.Add(t);
-                dependents.Add(s, tempDependents);
+                tempSet = new HashSet<string>();
+                tempSet.Add(t);
+                dependents.Add(s, tempSet);
                 dependees.Add(s, new HashSet<string>());
 
                 if (!dependents.ContainsKey(t))
                 {
-                    dependees.Add(t, new HashSet<string>());
+                    dependents.Add(t, new HashSet<string>());
                 }
                 if (dependees.ContainsKey(t))
                 {
-                    dependees.TryGetValue(t, out tempDependents);
-                    tempDependents.Add(s);
+                    dependees.TryGetValue(t, out tempSet);
+                    tempSet.Add(s);
                 }
                 else
                 {
-                    tempDependees = new HashSet<string>();
-                    tempDependees.Add(s);
-                    dependees.Add(t, tempDependees);
+                    tempSet = new HashSet<string>();
+                    tempSet.Add(s);
+                    dependees.Add(t, tempSet);
                 }
                 size++;
             }
@@ -263,7 +262,7 @@ namespace SpreadsheetUtilities
                     dependees.TryGetValue(t, out tempDependees);
                     tempDependees.Remove(s);
 
-                    if (tempDependees.Count == 0 && tempDependents.Count == 0)
+                    if (tempDependees.Count == 0 & tempDependents.Count == 0)
                     {
                         dependees.Remove(s);
                         dependents.Remove(s);
@@ -274,7 +273,7 @@ namespace SpreadsheetUtilities
                         dependents.TryGetValue(t, out tempDependents);
                         dependees.TryGetValue(t, out tempDependees);
 
-                        if (tempDependees.Count == tempDependents.Count)
+                        if (tempDependees.Count == 0 & tempDependents.Count == 0)
                         {
                             dependents.Remove(t);
                             dependees.Remove(t);
@@ -293,9 +292,10 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
+            HashSet<String> tempDependents;
             if (dependents.ContainsKey(s))
             {
-                HashSet<String> tempDependents;
+
                 dependents.TryGetValue(s, out tempDependents);
 
                 String[] dependentsToArray = tempDependents.ToArray();
@@ -307,7 +307,7 @@ namespace SpreadsheetUtilities
 
                  foreach (String newPair in newDependents)
                 {
-                    AddDependency(newPair, s);
+                    AddDependency(s, newPair);
                 }   
             }
             else
@@ -326,9 +326,10 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependees(string s, IEnumerable<string> newDependees)
         {
+            HashSet<String> tempDependees;
             if (dependees.ContainsKey(s))
             {
-                HashSet<String> tempDependees;
+                
                 dependees.TryGetValue(s, out tempDependees);
 
                 String[] dependeesToArray = tempDependees.ToArray();
