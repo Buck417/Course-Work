@@ -76,9 +76,14 @@ namespace SpreadsheetUtilities
                 {
                     return 0;
                 }
-                HashSet<String> tempDependees;
-                dependees.TryGetValue(s, out tempDependees);
-                return tempDependees.Count;
+                if (dependees.ContainsKey(s))
+                {
+                    HashSet<String> tempDependees;
+                    dependees.TryGetValue(s, out tempDependees);
+                    return tempDependees.Count;
+                }
+
+                return 0;
 
             }
         }
@@ -95,9 +100,13 @@ namespace SpreadsheetUtilities
                 dependents.TryGetValue(s, out tempDependents);
 
                 if (tempDependents.Count == 0)
+                {
                     return false;
-
-                return true;
+                }
+                else
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -115,9 +124,13 @@ namespace SpreadsheetUtilities
                 dependees.TryGetValue(s, out tempDependees);
 
                 if (tempDependees.Count == 0)
+                {
                     return false;
-
-                return true;
+                }
+                else
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -133,9 +146,13 @@ namespace SpreadsheetUtilities
             {
                 HashSet<String> tempDependents;
                 dependents.TryGetValue(s, out tempDependents);
-                return tempDependents;
+                foreach (String dependent in tempDependents)
+                {
+                    if (dependent != null)
+                        yield return dependent;
+                }
             }
-            return null;
+            yield break;
         }
 
         /// <summary>
@@ -147,9 +164,12 @@ namespace SpreadsheetUtilities
             {
                 HashSet<String> tempDependees;
                 dependees.TryGetValue(s, out tempDependees);
-                return tempDependees;
+                foreach(String dependee in tempDependees){
+                    if(dependees != null)
+                        yield return dependee;
+                }
             }
-            return null;
+            yield break;
         }
 
 
@@ -231,6 +251,39 @@ namespace SpreadsheetUtilities
         /// <param name="t"></param>
         public void RemoveDependency(string s, string t)
         {
+            HashSet<String> tempDependents;
+            HashSet<String> tempDependees;
+            if (dependents.ContainsKey(s))
+            {
+                dependents.TryGetValue(s, out tempDependents);
+
+                if (tempDependents.Contains(t))
+                {
+                    tempDependents.Remove(t);
+                    dependees.TryGetValue(t, out tempDependees);
+                    tempDependees.Remove(s);
+
+                    if (tempDependees.Count == 0 && tempDependents.Count == 0)
+                    {
+                        dependees.Remove(s);
+                        dependents.Remove(s);
+                    }
+
+                    if (s != t)
+                    {
+                        dependents.TryGetValue(t, out tempDependents);
+                        dependees.TryGetValue(t, out tempDependees);
+
+                        if (tempDependees.Count == tempDependents.Count)
+                        {
+                            dependents.Remove(t);
+                            dependees.Remove(t);
+                        }
+                    }
+                    size--;
+
+                }
+            }
         }
 
 
