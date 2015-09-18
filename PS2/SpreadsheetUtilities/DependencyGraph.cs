@@ -37,9 +37,9 @@ namespace SpreadsheetUtilities
     /// </summary>
     public class DependencyGraph
     {
-       private Dictionary<String, HashSet<String>> dependees;
-       private Dictionary<String, HashSet<String>> dependents;
-       private int size;
+       private Dictionary<String, HashSet<String>> dependees;               //A dictionary that has the dependee as the string, and the dependents as a list
+       private Dictionary<String, HashSet<String>> dependents;              //A dictionary that has the dependent as the string, and the dependees as a list
+       private int size;                                                    //Tracks the size of each Dictionary
 
         /// <summary>
         /// Creates an empty DependencyGraph.
@@ -76,7 +76,7 @@ namespace SpreadsheetUtilities
                 {
                     return 0;
                 }
-                if (dependees.ContainsKey(s))
+                if (dependees.ContainsKey(s))                           //If the dependees has S as a key, return the amount of dependees
                 {
                     HashSet<String> tempDependees;
                     dependees.TryGetValue(s, out tempDependees);
@@ -94,7 +94,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependents(string s)
         {
-            if(dependents.ContainsKey(s))
+            if(dependents.ContainsKey(s))                               //If dependents has s as a key, return true if its dependees > 0
             {
                 HashSet<String> tempDependents;
                 dependents.TryGetValue(s, out tempDependents);
@@ -118,7 +118,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependees(string s)
         {
-            if (dependees.ContainsKey(s))
+            if (dependees.ContainsKey(s))                               //If dependees has s as a key, return true if its dependents > 0
             {
                 HashSet<String> tempDependees;
                 dependees.TryGetValue(s, out tempDependees);
@@ -142,11 +142,11 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            if (dependents.ContainsKey(s))
+            if (dependents.ContainsKey(s))                              //If s is a key in dependents, return a Hashset of all the dependents
             {
                 HashSet<String> tempDependents;
                 dependents.TryGetValue(s, out tempDependents);
-                foreach (String dependent in tempDependents)
+                foreach (String dependent in tempDependents)            //Loop through the Hashset, returning 1 dependent for each call made to the function
                 {
                     if (dependent != null)
                         yield return dependent;
@@ -160,11 +160,11 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            if (dependees.ContainsKey(s))
+            if (dependees.ContainsKey(s))                               //If s is a key in dependees, return a Hashset of all the dependees
             {
                 HashSet<String> tempDependees;
                 dependees.TryGetValue(s, out tempDependees);
-                foreach(String dependee in tempDependees){
+                foreach(String dependee in tempDependees){              //Loop through the Hashset, returning 1 dependee for each call made to the function
                     if(dependee != null)
                         yield return dependee;
                 }
@@ -185,25 +185,26 @@ namespace SpreadsheetUtilities
         /// <param name="t"> t must be evaluated first.  S depends on T</param>
         public void AddDependency(string s, string t)
         {
-            HashSet<String> tempSet;
-            if (dependents.ContainsKey(s))
-            {  
-                dependents.TryGetValue(s, out tempSet);
 
-                if (!tempSet.Contains(t))
+            HashSet<String> tempSet;
+            if (dependents.ContainsKey(s))                              //If 1 or more dependents has s as a key, create a tempSet of all the dependents with s
+            {  
+                dependents.TryGetValue(s, out tempSet);                 
+
+                if (!tempSet.Contains(t))                               //If t is not a dependee, add t as a dependee to tempSet
                 {
                     tempSet.Add(t);
 
-                    if (!dependents.ContainsKey(t))
+                    if (!dependents.ContainsKey(t))                     //If t is not a key in dependents, add t to dependents with a new hashset
                     {
                         dependents.Add(t, new HashSet<string>());
                     }
-                    if (dependees.ContainsKey(t))
+                    if (dependees.ContainsKey(t))                       //If dependees has t as a key, create a tempSet of all the dependees with t, add s to the set
                     {
                         dependees.TryGetValue(t, out tempSet);
                         tempSet.Add(s);
                     }
-                    else
+                    else                                                //Else create a tempSet  and add s to it and add t, tempset to dependees, creating a new pair
                     {
                         tempSet = new HashSet<string>();
                         tempSet.Add(s);
@@ -217,6 +218,7 @@ namespace SpreadsheetUtilities
                 }
             }
             else
+                                                                        //If there is no s key, add s and t to dependents and dependees, effectively a new entry
             {
                 tempSet = new HashSet<string>();
                 tempSet.Add(t);
@@ -252,23 +254,23 @@ namespace SpreadsheetUtilities
         {
             HashSet<String> tempDependents;
             HashSet<String> tempDependees;
-            if (dependents.ContainsKey(s))
+            if (dependents.ContainsKey(s))                                      //If dependents contains a key s, create a temp with all dependents with s
             {
                 dependents.TryGetValue(s, out tempDependents);
 
-                if (tempDependents.Contains(t))
+                if (tempDependents.Contains(t))                                 //If t or s is a dependee, remove it
                 {
                     tempDependents.Remove(t);
                     dependees.TryGetValue(t, out tempDependees);
                     tempDependees.Remove(s);
 
-                    if (tempDependees.Count == 0 & tempDependents.Count == 0)
+                    if (tempDependees.Count == 0 & tempDependents.Count == 0)       //If no more dependees exist, then remove the dependent/dependee 
                     {
                         dependees.Remove(s);
                         dependents.Remove(s);
                     }
 
-                    if (s != t)
+                    if (s != t)                                                     //Then remove the dependee/dependent from the opposite dictionaries
                     {
                         dependents.TryGetValue(t, out tempDependents);
                         dependees.TryGetValue(t, out tempDependees);
@@ -300,21 +302,21 @@ namespace SpreadsheetUtilities
 
                 String[] dependentsToArray = tempDependents.ToArray();
 
-                foreach (String sameDependents in dependentsToArray)
+                foreach (String sameDependents in dependentsToArray)                            //Remove each matching dependent from s and add the new dependent
                 {
                     RemoveDependency(s, sameDependents);
                 }
 
-                 foreach (String newPair in newDependents)
+                 foreach (String newItem in newDependents)
                 {
-                    AddDependency(s, newPair);
+                    AddDependency(s, newItem);
                 }   
             }
             else
             {
-                foreach (String newPair in newDependents)
+                foreach (String newItem in newDependents)                                       //No matching dependent exists, so add it
                 {
-                    AddDependency(s, newPair);
+                    AddDependency(s, newItem);
                 }   
             }
         }
@@ -334,21 +336,21 @@ namespace SpreadsheetUtilities
 
                 String[] dependeesToArray = tempDependees.ToArray();
 
-                foreach (String sameDependees in dependeesToArray)
+                foreach (String sameDependees in dependeesToArray)                              //Remove each matching dependee from s and add the new dependee
                 {
                     RemoveDependency(sameDependees, s);
                 }
 
-                foreach (String newPair in newDependees)
+                foreach (String newItem in newDependees)
                 {
-                    AddDependency(newPair, s);
+                    AddDependency(newItem, s);
                 }
             }
             else
             {
-                foreach (String newPair in newDependees)
+                foreach (String newItem in newDependees)                                        //No matching dependee exists, so add it
                 {
-                    AddDependency(s, newPair);
+                    AddDependency(s, newItem);
                 }
             }
         }

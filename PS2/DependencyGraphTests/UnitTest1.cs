@@ -478,5 +478,164 @@ namespace PS2GradingTests
                 Assert.IsTrue(dees[i].SetEquals(new HashSet<string>(t.GetDependees(letters[i]))));
             }
         }
+         // ********************************** Ryan's Tests ******************** //
+        /// <summary>
+        ///Test after removing middle link
+        ///</summary>
+        [TestMethod()]
+        public void MyTest1()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("b", "c");
+            t.AddDependency("c", "d");
+            t.RemoveDependency("b", "c");
+            Assert.AreEqual(2, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test after removing two middle links
+        ///</summary>
+        [TestMethod()]
+        public void MyTest2()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("b", "c");
+            t.AddDependency("c", "d");
+            t.AddDependency("d", "e");
+            t.RemoveDependency("b", "c");
+            t.RemoveDependency("c", "d");
+            Assert.AreEqual(2, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test after removing middle link and replacing with identical pair
+        ///</summary>
+        [TestMethod()]
+        public void MyTest3()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("b", "c");
+            t.AddDependency("b", "d");
+            t.AddDependency("c", "d");
+            t.RemoveDependency("b", "c");
+            t.ReplaceDependents("b", new HashSet<string>() {"c"});
+            Assert.AreEqual(3, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test cycle
+        ///</summary>
+        [TestMethod()]
+        public void MyTest4()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("a", "c");
+            t.AddDependency("a", "a");
+            Assert.AreEqual(3, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test adding two of the same pairs
+        ///</summary>
+        [TestMethod()]
+        public void MyTest5()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("a", "b");
+            Assert.AreEqual(1, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test removing two of the same pairs
+        ///</summary>
+        [TestMethod()]
+        public void MyTest6()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("b", "c");
+            t.AddDependency("c", "d");
+            t.RemoveDependency("b", "c");
+            t.RemoveDependency("b", "c");
+            Assert.AreEqual(2, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test removing an empty DG
+        ///</summary>
+        [TestMethod()]
+        public void MyTest7()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("b", "c");
+            t.RemoveDependency("b", "c");
+            t.RemoveDependency("b", "c");
+            Assert.AreEqual(0, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test removing an empty DG
+        ///</summary>
+        [TestMethod()]
+        public void MyTest8()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("b", "c");
+            t.RemoveDependency("b", "c");
+            t.RemoveDependency("b", "c");
+            Assert.AreEqual(0, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test removing a cycle
+        ///</summary>
+        [TestMethod()]
+        public void MyTest9()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("b", "b");
+            t.RemoveDependency("b", "b");
+            Assert.AreEqual(0, t.Size);
+
+        }
+
+        /// <summary>
+        ///Test replacing a cycle and checking its dependents
+        ///</summary>
+        [TestMethod()]
+        public void MyTest10()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("b", "b");
+            t.ReplaceDependees("b", new HashSet<string>() { "c" });
+            Assert.IsTrue(t.HasDependents("c"));
+
+        }
+
+        /// <summary>
+        ///Test replacing a cycle and checking its dependees
+        ///</summary>
+        [TestMethod()]
+        public void MyTest11()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("b", "b");
+            t.ReplaceDependents("b", new HashSet<string>() { "c" });
+            Assert.IsTrue(t.HasDependees("c"));
+
+        }
     }
 }
