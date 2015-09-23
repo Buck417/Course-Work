@@ -37,7 +37,7 @@ namespace SpreadsheetUtilities
     public class Formula
     {
         private String validFormula;
-        private List<String> tokenFormula;
+        private HashSet<String> variables;
 
         /// <summary>
         /// Creates a Formula from a string that consists of an infix expression written as
@@ -81,7 +81,7 @@ namespace SpreadsheetUtilities
                 throw new FormulaFormatException("The formula given is empty");
             }
 
-           // tokenFormula = GetTokens(formula);
+            // tokenFormula = GetTokens(formula);
             validFormula = normalize(formula);
         }
 
@@ -140,6 +140,17 @@ namespace SpreadsheetUtilities
                 else if (isVar(instance))                                       //Checks if the string is a valid variable, if true it uses the delegate to return an int value and pass it to the helper method
                 {
                     Double variableValue = lookup(instance);
+
+                    if (operators.Count != 0)                                       //Checks if the operator is divides and if the divisor is 0, returns an error if true
+                    {
+                        if (operators.Peek() == "/")
+                        {
+                            if (variableValue == 0)
+                            {
+                                return new FormulaError("Cannot divide by zero");
+                            }
+                        }
+                    }
                     performOperation(variableValue, values, operators);
                 }
 
@@ -242,7 +253,7 @@ namespace SpreadsheetUtilities
                         }
                     }
                 }
-                }
+            }
 
             if (values.Count == 1 && operators.Count == 0)                   //If there only exists one value on the value stack after the loop is finished, this is our answer
             {
@@ -282,12 +293,9 @@ namespace SpreadsheetUtilities
         {
             string[] varSubString = Regex.Split(substringGiven, string.Empty);
             Double val;
-            if (Regex.IsMatch(substringGiven, "A"))
+            if (Regex.IsMatch(substringGiven, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
             {
-                if ((Regex.IsMatch(varSubString[1], @"^[a-zA-Z]+$")) && (Double.TryParse(varSubString[varSubString.Length - 2], out val)))
-                {
-                    return true;
-                }
+                return true;
             }
             return false;
         }
@@ -321,8 +329,7 @@ namespace SpreadsheetUtilities
                     operators.Pop();
                     stackValue = numbers.Pop();
                     Double divisionDouble = stackValue / givenValue;
-                    int divisionInt = (int)Math.Truncate(divisionDouble);
-                    numbers.Push(divisionInt);
+                    numbers.Push(divisionDouble);
                     return;
                 }
             }
@@ -345,7 +352,10 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<String> GetVariables()
         {
-            return null;
+            foreach (String s in variables)
+            {
+                yield return s;
+            }
         }
 
         /// <summary>
@@ -381,7 +391,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override bool Equals(object obj)
         {
-            return false;
+            if(obj == null)
+                return false;
+            if (obj.GetType() != this.GetType())
+                return false;
+            Formula temp = (Formula)obj;
+            return this.ToString().Equals(temp.ToString());
         }
 
         /// <summary>

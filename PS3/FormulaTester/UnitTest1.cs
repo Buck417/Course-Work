@@ -188,7 +188,7 @@ namespace PS3Tests
         public void TestConstructorFunc()
         {
             Formula testFormula = new Formula("3 + x", s => s.ToUpper(), s => (s == "X") ? true : false);
-            Assert.AreEqual("3+X", testFormula.ToString());
+            Assert.AreEqual("3 + X", testFormula.ToString());
         }
 
         /// <summary>
@@ -201,5 +201,86 @@ namespace PS3Tests
             Formula testFormula = new Formula("3 + x", s => s.ToLower(), s => (s == "X") ? true : false);
             Assert.AreEqual("3+X", testFormula.ToString());
         }
+
+
+        /*
+         * Tests for the Evaluate Method
+         */
+
+
+        /// <summary>
+        /// Common test for evaluate method
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluate1()
+        {
+            Func<string, double> lookup = s => 0;
+            Assert.AreEqual(4.0, new Formula("2+2").Evaluate(lookup));
+        }
+
+        /// <summary>
+        /// Common test for evaluate method with variable
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateVar1()
+        {
+            Func<string, double> lookup = s => 0;
+            Assert.AreEqual(2.0, new Formula("2+x").Evaluate(lookup));
+        }
+
+        /// <summary>
+        /// Common test for evaluate method with variable
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateVar2()
+        {
+            Func<string, double> lookup = s => 0;
+            Assert.AreEqual(16.0, new Formula("(2+x)*8").Evaluate(lookup));
+        }
+
+        /// <summary>
+        /// Common test for evaluate method with variable
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateVar3()
+        {
+            Func<string, double> lookup = s => 0;
+            Assert.AreEqual(0.0, new Formula("2*(x2*5)").Evaluate(lookup));
+        }
+
+        /// <summary>
+        /// Common test for evaluate method with variable
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateVar4()
+        {
+            Func<string, double> lookup = s => 4;
+            Assert.AreEqual(0.5, new Formula("2/x").Evaluate(lookup));
+        }
+
+        /// <summary>
+        /// Testing divide by 0, since it returns an object, check the object toString() and see if the error is correct.
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateDivideByZero1()
+        {
+            Func<string, double> lookup = s => 0;
+            Formula testFormula = new Formula("2/x");
+            Object c = testFormula.Evaluate(lookup);
+            Assert.AreEqual("SpreadsheetUtilities.FormulaError", c.ToString());
+        }
+
+        /// <summary>
+        /// Testing divide by 0, since it returns an object, check the object toString() and see if the error is correct.
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateDivideByZero2()
+        {
+            Func<string, double> lookup = s => -2;
+            Formula testFormula = new Formula("6/(x+2)");
+            Object c = testFormula.Evaluate(lookup);
+            Assert.AreEqual("SpreadsheetUtilities.FormulaError", c.ToString());
+        }
+
     }
 }
