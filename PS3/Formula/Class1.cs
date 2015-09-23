@@ -37,6 +37,9 @@ namespace SpreadsheetUtilities
     public class Formula
     {
         private String validFormula;
+        private string p1;
+        private Func<string, string> func;
+        private bool p2;
         /// <summary>
         /// Creates a Formula from a string that consists of an infix expression written as
         /// described in the class comment.  If the expression is syntactically invalid,
@@ -48,6 +51,7 @@ namespace SpreadsheetUtilities
         public Formula(String formula) :
             this(formula, s => s, s => true)
         {
+            Formula validFormula = new Formula(formula, s => s, s => true);
         }
 
         /// <summary>
@@ -76,6 +80,14 @@ namespace SpreadsheetUtilities
         {
         }
 
+        public Formula(string p1, Func<string, string> func, bool p2)
+        {
+            // TODO: Complete member initialization
+            this.p1 = p1;
+            this.func = func;
+            this.p2 = p2;
+        }
+
         /// <summary>
         /// Evaluates this Formula, using the lookup delegate to determine the values of
         /// variables.  When a variable symbol v needs to be determined, it should be looked up
@@ -99,10 +111,11 @@ namespace SpreadsheetUtilities
         /// </summary>
         public object Evaluate(Func<string, double> lookup)
         {
-            Stack<int> values = new Stack<int>();
+            Stack<Double> values = new Stack<Double>();
             Stack<String> operators = new Stack<String>();
-            String[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
-            int tempVal, first, second;
+            String[] substrings = Regex.Split(validFormula, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+            double tempVal, first, second;
+            String op;
 
             for (int i = 0; i < substrings.Length; i++)                         //For loop that goes through each valid case for a specific int or string
             {
@@ -112,117 +125,129 @@ namespace SpreadsheetUtilities
                     continue;
                 }
 
-                if (int.TryParse(instance, out tempVal))                        //Tries to parse a string to an int, if successful passes the int to the helper method
-                {
-                    performOperation(tempVal, values, operators);
-                }
-                else if (isVar(instance))                                       //Checks if the string is a valid variable, if true it uses the delegate to return an int value and pass it to the helper method
-                {
-                    int variableValue = variableEvaluator(instance);
-                    performOperation(variableValue, values, operators);
-                }
+                if (Double.TryParse(instance, out tempVal))                        //Tries to parse a string to an int, if successful passes the int to the helper method
 
-                else if (instance == "*" || instance == "/")                    //Checks for the multiply and divide operators in the string, pushes to stack if true
-                {
-                    operators.Push(instance);
-                }
-
-                else if (instance == "+" | instance == "-")                     //Checks for the add or subtract operator in the string
-                {
-                    if (!(operators.Count == 0))
+                    if (operators.Count != 0)                                       //Checks if the operator is divides and if the divisor is 0, returns an error if true
                     {
-                        if (operators.Peek() == "+" | operators.Peek() == "-")                                  //Performs the addition or subtraction if there are two valid values and one operator in the stacks
+                        op = operators.Peek();
+
+                        if (op == "/")
+                        {
+                            if (tempVal == 0)
+                            {
+                                return new FormulaError("Cannot divide by zero");
+                            }
+                        }
+
+                        performOperation(tempVal, values, operators);
+                    }
+                    else if (isVar(instance))                                       //Checks if the string is a valid variable, if true it uses the delegate to return an int value and pass it to the helper method
+                    {
+                        Double variableValue = lookup(instance);
+                        performOperation(variableValue, values, operators);
+                    }
+
+                    else if (instance == "*" || instance == "/")                    //Checks for the multiply and divide operators in the string, pushes to stack if true
+                    {
+                        operators.Push(instance);
+                    }
+
+                    else if (instance == "+" | instance == "-")                     //Checks for the add or subtract operator in the string
+                    {
+                        if (!(operators.Count == 0))
+                        {
+                            if (operators.Peek() == "+" | operators.Peek() == "-")                                  //Performs the addition or subtraction if there are two valid values and one operator in the stacks
+                            {
+                                if (values.Count <= 1)
+                                    return new FormulaError("The expression is invalid, not enough values");
+
+                                second = values.Pop();
+                                first = values.Pop();
+                                String operation = operators.Pop();
+
+                                if (operation == "+")
+                                {
+                                    tempVal = first + second;
+                                    values.Push(tempVal);
+                                }
+                                else
+                                    tempVal = first - second;
+
+                            }
+
+                        }
+                        operators.Push(instance);
+                    }
+
+                    else if (instance == "(")                                                   //Checks if the string contains a left parenthesis, if true pushes it to the operator stack
+                    {
+                        operators.Push(instance);
+                    }
+
+                    else if (instance == ")")                                                   //Checks if the string contains a right parenthesis
+                    {
+                        if (operators.Peek() == "+" || operators.Peek() == "-")                 //Checks if the next operator in the stack is a + or - and performs the operation to the two most current values in the value stack
                         {
                             if (values.Count <= 1)
-                                throw new ArgumentException("The expression is invalid, not enough values");
+                                return new FormulaError("The expression is invalid, not enough values");
 
                             second = values.Pop();
                             first = values.Pop();
                             String operation = operators.Pop();
-
                             if (operation == "+")
                             {
-                                tempVal = first + second;
-                                values.Push(tempVal);
-                            }
-                            else
-                                tempVal = first - second;
-
-                        }
-
-                    }
-                    operators.Push(instance);
-                }
-
-                else if (instance == "(")                                                   //Checks if the string contains a left parenthesis, if true pushes it to the operator stack
-                {
-                    operators.Push(instance);
-                }
-
-                else if (instance == ")")                                                   //Checks if the string contains a right parenthesis
-                {
-                    if (operators.Peek() == "+" || operators.Peek() == "-")                 //Checks if the next operator in the stack is a + or - and performs the operation to the two most current values in the value stack
-                    {
-                        if (values.Count <= 1)
-                            throw new ArgumentException("The expression is invalid, not enough values");
-
-                        second = values.Pop();
-                        first = values.Pop();
-                        String operation = operators.Pop();
-                        if (operation == "+")
-                        {
-                            first = first + second;
-                            values.Push(first);
-                        }
-                        else
-                        {
-                            first = first - second;
-                            values.Push(first);
-                        }
-                    }
-
-                    if (operators.Count == 0)                    //Checks if the operator stack is empty, throws an exception if true
-                    {
-                        throw new ArgumentException("There is a missing '(' in the expression");
-                    }
-
-                    if (operators.Peek() != "(")                 //Checks if the operator stacks next operator is not a left parenthesis, throws an exception if true
-                    {
-                        throw new ArgumentException("There is a missing '(' in the expression");
-                    }
-
-                    operators.Pop();
-
-                    if (!(operators.Count == 0))
-                    {
-                        if (operators.Peek() == "*" | operators.Peek() == "/")                          //Checks if the next operator is a * or a /, performs the operation on the stacks
-                        {
-                            if (values.Count <= 1)
-                                throw new ArgumentException("The expression is invalid, not enough values");
-
-                            second = values.Pop();
-                            first = values.Pop();
-                            String operation = operators.Pop();
-                            if (operation == "*")
-                            {
-                                first = first * second;
+                                first = first + second;
                                 values.Push(first);
                             }
                             else
                             {
-
-                                if (second == 0)
-                                {
-                                    throw new ArgumentException("Cannot divide by zero");
-                                }
-                                Double divisionDouble = first / second;
-                                int divisionInt = (int)Math.Truncate(divisionDouble);
-                                values.Push(divisionInt);
+                                first = first - second;
+                                values.Push(first);
                             }
                         }
-                    }
 
-                }
+                        if (operators.Count == 0)                    //Checks if the operator stack is empty, throws an exception if true
+                        {
+                            throw new ArgumentException("There is a missing '(' in the expression");
+                        }
+
+                        if (operators.Peek() != "(")                 //Checks if the operator stacks next operator is not a left parenthesis, throws an exception if true
+                        {
+                            throw new ArgumentException("There is a missing '(' in the expression");
+                        }
+
+                        operators.Pop();
+
+                        if (!(operators.Count == 0))
+                        {
+                            if (operators.Peek() == "*" | operators.Peek() == "/")                          //Checks if the next operator is a * or a /, performs the operation on the stacks
+                            {
+                                if (values.Count <= 1)
+                                    throw new ArgumentException("The expression is invalid, not enough values");
+
+                                second = values.Pop();
+                                first = values.Pop();
+                                String operation = operators.Pop();
+                                if (operation == "*")
+                                {
+                                    first = first * second;
+                                    values.Push(first);
+                                }
+                                else
+                                {
+
+                                    if (second == 0)
+                                    {
+                                        throw new ArgumentException("Cannot divide by zero");
+                                    }
+                                    Double divisionDouble = first / second;
+                                    int divisionInt = (int)Math.Truncate(divisionDouble);
+                                    values.Push(divisionInt);
+                                }
+                            }
+                        }
+
+                    }
             }
 
             if (values.Count == 1 && operators.Count == 0)                   //If there only exists one value on the value stack after the loop is finished, this is our answer
@@ -262,10 +287,10 @@ namespace SpreadsheetUtilities
         public static Boolean isVar(String substringGiven)
         {
             string[] varSubString = Regex.Split(substringGiven, string.Empty);
-            int val;
+            Double val;
             if (Regex.IsMatch(substringGiven, @"^[a-zA-Z0-9]+$"))
             {
-                if ((Regex.IsMatch(varSubString[1], @"^[a-zA-Z]+$")) && (int.TryParse(varSubString[varSubString.Length - 2], out val)))
+                if ((Regex.IsMatch(varSubString[1], @"^[a-zA-Z]+$")) && (Double.TryParse(varSubString[varSubString.Length - 2], out val)))
                 {
                     return true;
                 }
@@ -281,9 +306,9 @@ namespace SpreadsheetUtilities
         /// <param name="givenValue">Value given that requires either an operation performed or a stack push</param>
         /// <param name="numbers">The stack that contains a value used with an operation</param>
         /// <param name="operators">The stack that contains an operator used with two values</param>
-        public static void performOperation(int givenValue, Stack<int> numbers, Stack<string> operators)
+        public static void performOperation(Double givenValue, Stack<Double> numbers, Stack<string> operators)
         {
-            int stackValue;
+            Double stackValue;
 
             if (operators.Count != 0)
             {
@@ -312,11 +337,11 @@ namespace SpreadsheetUtilities
                     return;
                 }
             }
-           
+
             numbers.Push(givenValue);
         }
 
-    
+
 
         /// <summary>
         /// Enumerates the normalized versions of all of the variables that occur in this 
