@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
+using System.Text.RegularExpressions;
 
 namespace PS3Tests
 {
@@ -282,5 +283,186 @@ namespace PS3Tests
             Assert.AreEqual("SpreadsheetUtilities.FormulaError", c.ToString());
         }
 
+        /// <summary>
+        /// Common test using Formula constructor with Func's provided using multiple variables
+        /// and then evaluating
+        /// </summary>
+        [TestMethod]
+        public void StressTestMultipleVariables()
+        {
+            Formula testFormula = new Formula("(3+x)*y", s => s.ToUpper(), s => (s == "X" || s == "Y") ? true : false);
+            Func<string, double> lookup = s => (s == "X") ? 1 : 4;
+            Assert.AreEqual(16.0, testFormula.Evaluate(lookup));
+        }
+
+        /*
+         * GetVariables Tests
+         */
+
+        /// <summary>
+        /// Common test for multiple variables
+        /// </summary>
+        [TestMethod]
+        public void GetVariables1()
+        {
+            Formula testFormula = new Formula("(3+x)*y");
+            foreach (string s in testFormula.GetVariables())
+                Assert.IsTrue(Regex.IsMatch(s, @"[xy]"));
+        }
+
+        /// <summary>
+        /// Common test for multiple variables, some multiple instances
+        /// </summary>
+        [TestMethod]
+        public void GetVariables2()
+        {
+            Formula testFormula = new Formula("(3+x)*y+x");
+            int i = 0;
+            foreach (string s in testFormula.GetVariables()){
+                i++;
+                Assert.IsTrue(Regex.IsMatch(s, @"[xy]"));
+            }
+            Assert.Equals(2, i);
+
+        }
+
+        /// <summary>
+        /// Common test for multiple variables with lambdas
+        /// </summary>
+        [TestMethod]
+        public void GetVariables3()
+        {
+            Formula testFormula = new Formula("(3+x)*y", s => s.ToUpper(), s => (Regex.IsMatch(s, @"[A-Z]")));
+            foreach (string s in testFormula.GetVariables())
+                Assert.IsTrue(Regex.IsMatch(s, @"[XY]"));
+        }
+
+        
+        /*
+         * Equals Tests
+         */
+
+        /// <summary>
+        /// Common test for equal objects
+        /// </summary>
+        [TestMethod]
+        public void TestEqualsSameObjectType()
+        {
+            Formula testFormula1 = new Formula("a/b");
+            Formula testFormula2 = new Formula("a/b");
+            Assert.IsTrue(testFormula1.Equals(testFormula2));
+        }
+
+        /// <summary>
+        /// Common test for not equal objects
+        /// </summary>
+        [TestMethod]
+        public void TestEqualsNotSameObjectType()
+        {
+            String testString = "test";
+            Formula testFormula2 = new Formula("a/b");
+            Assert.IsFalse(testString.Equals(testFormula2));
+        }
+
+
+        /*
+         * == and != Operator Tests
+         */
+
+
+        /// <summary>
+        /// Common test for equal objects using ==
+        /// </summary>
+        [TestMethod]
+        public void TestOperator1()
+        {
+            Formula testFormula1 = new Formula("a/b");
+            Formula testFormula2 = new Formula("a/b");
+            Assert.IsTrue(testFormula2 == testFormula1);
+        }
+
+        /// <summary>
+        /// Common test for not equal objects using ==
+        /// </summary>
+        [TestMethod]
+        public void TestOperator2()
+        {
+            Formula testFormula1 = new Formula("a/b");
+            Formula testFormula2 = null;
+            Assert.IsFalse(testFormula2 == testFormula1);
+        }
+
+        /// <summary>
+        /// Common test for equal null objects using ==
+        /// </summary>
+        [TestMethod]
+        public void TestOperator3()
+        {
+            Formula testFormula1 = null;
+            Formula testFormula2 = null;
+            Assert.IsTrue(testFormula2 == testFormula1);
+        }
+
+        /// <summary>
+        /// Common test for equal objects using !=
+        /// </summary>
+        [TestMethod]
+        public void TestOperator4()
+        {
+            Formula testFormula1 = new Formula("a/b");
+            Formula testFormula2 = new Formula("a/b");
+            Assert.IsFalse(testFormula2 != testFormula1);
+        }
+
+        /// <summary>
+        /// Common test for equal objects using !=
+        /// </summary>
+        [TestMethod]
+        public void TestOperator5()
+        {
+            Formula testFormula1 = null;
+            Formula testFormula2 = new Formula("a/b");
+            Assert.IsTrue(testFormula2 != testFormula1);
+        }
+
+        /// <summary>
+        /// Common test for equal objects using !=
+        /// </summary>
+        [TestMethod]
+        public void TestOperator6()
+        {
+            Formula testFormula1 = null;
+            Formula testFormula2 = null;
+            Assert.IsFalse(testFormula2 != testFormula1);
+        }
+
+
+
+        /*
+         * GetHashCode Tests
+         */
+
+
+        /// <summary>
+        /// Common test for what should be equal hashcodes
+        /// </summary>
+        [TestMethod]
+        public void TestGetHashCode1()
+        {
+            Formula testFormula1 = new Formula("a/b");
+            Formula testFormula2 = new Formula("a/b");
+            Assert.IsTrue(testFormula1.GetHashCode() == testFormula2.GetHashCode());
+        }
+
+        /// <summary>
+        /// Common test for what should be not equal hashcodes
+        /// </summary>
+        [TestMethod]
+        public void TestGetHashCode2()
+        {
+            Formula testFormula1 = new Formula("a/b");
+            Formula testFormula2 = new Formula("b/a");
+            Assert.IsFalse(testFormula1.GetHashCode() == testFormula2.GetHashCode());
+        }
     }
 }

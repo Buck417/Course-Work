@@ -289,10 +289,9 @@ namespace SpreadsheetUtilities
         /// </summary>
         /// <param name="substringGiven">The variable that its given to see if it is valid.</param>
         /// <returns>Returns true if the variable is valid and false if it isnt.</returns>
-        public static Boolean isVar(String substringGiven)
+        private static Boolean isVar(String substringGiven)
         {
             string[] varSubString = Regex.Split(substringGiven, string.Empty);
-            Double val;
             if (Regex.IsMatch(substringGiven, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
             {
                 return true;
@@ -308,7 +307,7 @@ namespace SpreadsheetUtilities
         /// <param name="givenValue">Value given that requires either an operation performed or a stack push</param>
         /// <param name="numbers">The stack that contains a value used with an operation</param>
         /// <param name="operators">The stack that contains an operator used with two values</param>
-        public static void performOperation(Double givenValue, Stack<Double> numbers, Stack<string> operators)
+        private static void performOperation(Double givenValue, Stack<Double> numbers, Stack<string> operators)
         {
             Double stackValue;
 
@@ -406,7 +405,16 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
-            return false;
+            if(Object.ReferenceEquals(f1, null) && Object.ReferenceEquals(f2, null)) 
+                return true;
+
+            if(!(Object.ReferenceEquals(f1, null)) && Object.ReferenceEquals(f2, null)) 
+                return false;
+
+            if((Object.ReferenceEquals(f1, null)) && !(Object.ReferenceEquals(f2, null))) 
+                return false;
+
+            return f1.ToString().Equals(f2.ToString());
         }
 
         /// <summary>
@@ -416,7 +424,16 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator !=(Formula f1, Formula f2)
         {
-            return false;
+            if (Object.ReferenceEquals(f1, null) && Object.ReferenceEquals(f2, null))
+                return false;
+
+            if (!(Object.ReferenceEquals(f1, null)) && Object.ReferenceEquals(f2, null))
+                return true;
+
+            if ((Object.ReferenceEquals(f1, null)) && !(Object.ReferenceEquals(f2, null)))
+                return true;
+
+            return !(f1.ToString().Equals(f2.ToString()));
         }
 
         /// <summary>
@@ -426,7 +443,15 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override int GetHashCode()
         {
-            return 0;
+            int hashCode = 0;
+            int counter = 1;
+            String[] substrings = Regex.Split(validFormula, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
+            foreach (String s in substrings)
+            {
+                hashCode = (hashCode + s.GetHashCode()) * counter;
+                counter++;
+            }
+            return hashCode;
         }
 
         /// <summary>
