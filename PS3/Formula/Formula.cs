@@ -9,6 +9,12 @@
 //  (Version 1.1) Changed specification of second constructor to
 //                clarify description of how validation works
 
+// Version 1.2 (9/24/2015 11:59 p.m.)
+
+//Change log:
+// (Version 1.2) Implemented the constructors and methods left undone
+// Author: Ryan Fletcher
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -150,7 +156,6 @@ namespace SpreadsheetUtilities
                     openParenthesis++;
                     if(previous == "(" || isOperator(previous)){
                         formulaBuilder.Append(s);
-                        //formulaStack.Push(s);
                         previous = s;
                     
                     }
@@ -165,7 +170,6 @@ namespace SpreadsheetUtilities
                     closedParenthesis++;
                     if(isVar(previous) || previous == ")" || Double.TryParse(previous, out tempVal)){
                         formulaBuilder.Append(s);
-                        //formulaStack.Push(s);
                         previous = s;
                     }
                     else{
@@ -486,11 +490,12 @@ namespace SpreadsheetUtilities
         /// <param name="operators">The stack that contains an operator used with two values</param>
         private static void performOperation(Double givenValue, Stack<Double> numbers, Stack<string> operators)
         {
+            //Used as a place holder for the answer of the evaluation
             Double stackValue;
 
             if (operators.Count != 0)
             {
-
+                //If an operator * is on the stack, multiply the two values and return the answer to the stack
                 if (operators.Peek() == "*")
                 {
                     operators.Pop();
@@ -499,7 +504,7 @@ namespace SpreadsheetUtilities
                     numbers.Push(stackValue);
                     return;
                 }
-
+                //If an operator / is on the stack, divide the two values and return the answer to the stack. Note that the check for dividing by 0 already happened.
                 if (operators.Peek() == "/")
                 {
                     operators.Pop();
@@ -509,7 +514,6 @@ namespace SpreadsheetUtilities
                     return;
                 }
             }
-
             numbers.Push(givenValue);
         }
 
@@ -528,6 +532,8 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<String> GetVariables()
         {
+            //This will loop through a hashset of variables created when the formula object was created, returning a variable that exists in the formula
+            //each time the loop is called.
             foreach (String s in variables)
             {
                 yield return s;
@@ -625,6 +631,8 @@ namespace SpreadsheetUtilities
             String[] substrings = Regex.Split(validFormula, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
             foreach (String s in substrings)
             {
+                //This hashCode formula computers the hashcode for each character in the string and adds it to the total sum of hashcodes.
+                //It then multiplies sum by the number of times the loop has iterated, ensuring an almost unique hashcode so the a/b != b/a.
                 hashCode = (hashCode + s.GetHashCode()) * counter;
                 counter++;
             }

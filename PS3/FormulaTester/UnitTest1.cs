@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace PS3Tests
 {
@@ -369,6 +370,36 @@ namespace PS3Tests
                 Assert.IsTrue(Regex.IsMatch(s, @"[XY]"));
         }
 
+        /// <summary>
+        /// Larger test for GetVariables method
+        /// </summary>
+        [TestMethod()]
+        public void GetVariables4()
+        {
+            Formula testFormula = new Formula("a1+b2*c3+d4/A2-Z7+a1/y8");
+            List<string> variables = new List<string>(testFormula.GetVariables());
+            HashSet<string> expected = new HashSet<string>() { "a1", "b2", "c3", "d4", "A2", "Z7", "y8" };
+            Assert.AreEqual(variables.Count, 7);
+            Assert.IsTrue(expected.SetEquals(variables));
+        }
+
+
+        /*
+         * ToString Tests
+         */
+
+
+        /// <summary>
+        /// Simple test for the ToString method
+        /// </summary>
+        [TestMethod()]
+        public void ToStringTest()
+        {
+            Formula testFormula = new Formula("4+35");
+            Assert.IsTrue(testFormula.Equals(new Formula(testFormula.ToString())));
+        }
+
+
         
         /*
          * Equals Tests
@@ -496,20 +527,5 @@ namespace PS3Tests
             Formula testFormula2 = new Formula("b/a");
             Assert.IsFalse(testFormula1.GetHashCode() == testFormula2.GetHashCode());
         }
-
-
-        /*
-         * PRIVATE METHOD TESTS
-         */
-
-        /// <summary>
-        /// Common test for GetVar() private method
-        /// </summary>
-        [TestMethod]
-        public void TestGetVar1()
-        {
-            String testString = "x2";
-        }
-
     }
 }
