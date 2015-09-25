@@ -62,7 +62,7 @@ namespace PS3Tests
         public void TestConstructorStandardVariable2()
         {
             Formula testFormula = new Formula("4.0 + (x)");
-            Assert.AreEqual("4.0+x", testFormula.ToString());
+            Assert.AreEqual("4.0+(x)", testFormula.ToString());
         }
         
         /// <summary>
@@ -90,9 +90,20 @@ namespace PS3Tests
         /// </summary>
         [TestMethod]
         [ExpectedException(typeof(FormulaFormatException))]
-        public void TestConstructorFailStandardWrongVariableFormat()
+        public void TestConstructorFailStandardWrongVariableFormat1()
         {
             Formula testFormula = new Formula("2x");
+        }
+
+        /// <summary>
+        /// Common test for construction with incorrect variable
+        /// </summary>
+        [TestMethod]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void TestConstructorFailStandardWrongVariableFormat2()
+        {
+            Func<string, double> lookup = s => 0;
+            Formula testFormula = new Formula("3x+2");
         }
 
         /// <summary>
@@ -189,7 +200,7 @@ namespace PS3Tests
         public void TestConstructorFunc()
         {
             Formula testFormula = new Formula("3 + x", s => s.ToUpper(), s => (s == "X") ? true : false);
-            Assert.AreEqual("3 + X", testFormula.ToString());
+            Assert.AreEqual("3+X", testFormula.ToString());
         }
 
         /// <summary>
@@ -226,8 +237,9 @@ namespace PS3Tests
         public void TestEvaluateVar1()
         {
             Func<string, double> lookup = s => 0;
-            Assert.AreEqual(2.0, new Formula("2+x").Evaluate(lookup));
+            Assert.AreEqual(2.0, new Formula("x3+2").Evaluate(lookup));
         }
+
 
         /// <summary>
         /// Common test for evaluate method with variable
@@ -257,6 +269,26 @@ namespace PS3Tests
         {
             Func<string, double> lookup = s => 4;
             Assert.AreEqual(0.5, new Formula("2/x").Evaluate(lookup));
+        }
+
+        /// <summary>
+        /// Common test for evaluate method with variable
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateVar5()
+        {
+            Func<string, double> lookup = s => 4;
+            Assert.AreEqual(0.5, new Formula("2/_x").Evaluate(lookup));
+        }
+
+        /// <summary>
+        /// Common test for evaluate method with extra long variable
+        /// </summary>
+        [TestMethod]
+        public void TestEvaluateVar6()
+        {
+            Func<string, double> lookup = s => 4;
+            Assert.AreEqual(0.5, new Formula("2/_x5r_9_4rly_").Evaluate(lookup));
         }
 
         /// <summary>
@@ -322,7 +354,7 @@ namespace PS3Tests
                 i++;
                 Assert.IsTrue(Regex.IsMatch(s, @"[xy]"));
             }
-            Assert.Equals(2, i);
+            Assert.AreEqual(2, i);
 
         }
 
@@ -464,5 +496,20 @@ namespace PS3Tests
             Formula testFormula2 = new Formula("b/a");
             Assert.IsFalse(testFormula1.GetHashCode() == testFormula2.GetHashCode());
         }
+
+
+        /*
+         * PRIVATE METHOD TESTS
+         */
+
+        /// <summary>
+        /// Common test for GetVar() private method
+        /// </summary>
+        [TestMethod]
+        public void TestGetVar1()
+        {
+            String testString = "x2";
+        }
+
     }
 }

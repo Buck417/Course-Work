@@ -37,7 +37,7 @@ namespace SpreadsheetUtilities
     public class Formula
     {
         private String validFormula;
-        private HashSet<String> variables;
+        private HashSet<String> variables = new HashSet<String>();
 
         /// <summary>
         /// Creates a Formula from a string that consists of an infix expression written as
@@ -76,13 +76,153 @@ namespace SpreadsheetUtilities
         /// </summary>
         public Formula(String formula, Func<string, string> normalize, Func<string, bool> isValid)
         {
+            //variables used to keep track of parenthesis
+            int openParenthesis = 0;
+            int closedParenthesis = 0;
+           
+            //variable used to determine if a token is a number
+            double tempVal;
+
+            //variable used to normalize a formula variable
+            String tempVariable;
+
+            //String used to determine what came before the current token
+            String previous = null;
+         
+            //Stringbuilder used to create the valid formula
+            StringBuilder formulaBuilder = new StringBuilder();
+
+            //Checks if the formula is not an empty string
             if (formula.Length < 1)
             {
                 throw new FormulaFormatException("The formula given is empty");
             }
 
-            // tokenFormula = GetTokens(formula);
-            validFormula = normalize(formula);
+            //Used to see if the beginning and end of the formula are correct
+            string[] formulaTokens = GetTokens(formula).ToArray();
+
+            //At this point, this is called when a formula given was just white spaces and the tokens returned would be 0
+            if (formulaTokens.Length < 1)
+                throw new FormulaFormatException("The formula given is empty");
+
+            //Checks if the beginning of the formula starts with a "(", a number, or a variable
+            if (formulaTokens[0] != "(" && !(isVar(formulaTokens[0])) && !(Double.TryParse(formulaTokens[0], out tempVal)))
+                throw new FormulaFormatException("The formula given is in an incorrect format");
+
+            //Checks if the ending of the formula ends with a ")", a number, or a variable
+            if (formulaTokens[formulaTokens.Length - 1] != ")" && !(isVar(formulaTokens[formulaTokens.Length-1])) && !(Double.TryParse(formulaTokens[formulaTokens.Length - 1], out tempVal)))
+                throw new FormulaFormatException("The formula given is in an incorrect format");
+
+            //Foreach loop used to loop through the string to create the formula
+            foreach (String s in GetTokens(formula))
+            {
+
+
+                //Must initially check the first token because previous is null and you cannot check the value of previous
+                if(previous == null)                        
+                {
+                    if(Double.TryParse(s, out tempVal)) 
+                    {
+                        formulaBuilder.Append(s);
+                        previous = s;
+                    }
+                    else if(isVar(s))
+                    {
+                        formulaBuilder.Append(s);
+                        previous = s;
+                        variables.Add(s);
+                    }
+                    else if(s == "(")
+                    {
+                        formulaBuilder.Append(s);
+                        previous = s;
+                        openParenthesis++;
+                    }
+                    else
+                        throw new FormulaFormatException("The formula given is in an incorrect format");
+                    continue;
+                }
+
+
+                //This if block checks for an open parenthesis in the formula string
+                if (s == "(")
+                {
+                    openParenthesis++;
+                    if(previous == "(" || isOperator(previous)){
+                        formulaBuilder.Append(s);
+                        //formulaStack.Push(s);
+                        previous = s;
+                    
+                    }
+                    else{
+                        throw new FormulaFormatException("An open parenthesis was not preceded by an operator or another open parenthesis");
+                    }
+                }
+
+                //This if block checks for a closed parenthesis in the formula string
+                if (s == ")")
+                {
+                    closedParenthesis++;
+                    if(isVar(previous) || previous == ")" || Double.TryParse(previous, out tempVal)){
+                        formulaBuilder.Append(s);
+                        //formulaStack.Push(s);
+                        previous = s;
+                    }
+                    else{
+                        throw new FormulaFormatException("An closed parenthesis was not preceded by a number, variable, or another closed parenthesis");
+                    }
+                }
+
+                //This if block checks for a number in the formula string
+                if(Double.TryParse(s, out tempVal))
+                {
+                    if(previous == "(" || isOperator(previous)){
+                        formulaBuilder.Append(s);
+                        previous = s;
+                    }
+                    else{
+                        throw new FormulaFormatException("A number was not preceded by an open parenthesis or an operator");
+                    }
+                }
+
+                //This if block checks for a number in the formula string and normalizes and validates the variable
+                if(isVar(s))
+                {
+                    if(previous == "(" || isOperator(previous)){
+                        tempVariable = normalize(s);
+                        if(!isValid(tempVariable))
+                            throw new FormulaFormatException("The normalized version of a variable is not valid");
+                        formulaBuilder.Append(tempVariable);
+                        variables.Add(tempVariable);
+                        previous = s;
+                        
+                    }
+                    else{
+                        throw new FormulaFormatException("A number was not preceded by an open parenthesis or an operator");
+                    }
+                }
+
+                //This if block checks for an operator in the formula string
+                if(isOperator(s))
+                {
+                    if(previous == ")" || Double.TryParse(previous, out tempVal)|| isVar(previous)){
+                        formulaBuilder.Append(s);
+                        previous = s;
+                    }
+                    else{
+                        throw new FormulaFormatException("An operator was not preceded by a closed parenthesis, a number, or a variable");
+                    }
+                }
+
+
+            }
+
+            //Checks to see equal parenthesis existed in the formula provided
+            if(openParenthesis != closedParenthesis)
+                throw new FormulaFormatException("There were not an equal amount of open to closed parenthesis");
+           
+            //Takes every token appended to formulaBuilder and forms a formula for the class
+            validFormula = formulaBuilder.ToString();
         }
 
 
@@ -114,17 +254,21 @@ namespace SpreadsheetUtilities
             String[] substrings = Regex.Split(validFormula, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");
             double tempVal, firstStackValue, secondStackValue;
 
-            for (int i = 0; i < substrings.Length; i++)                         //For loop that goes through each valid case for a specific int or string
+            //For loop that goes through each valid case for a specific int or string
+            for (int i = 0; i < substrings.Length; i++)                         
             {
                 String instance = substrings[i];
-                if (instance == " " || instance == "")                          //Increments if the string is empty
+                //Increments if the string is empty
+                if (instance == " " || instance == "")                          
                 {
                     continue;
                 }
 
-                if (Double.TryParse(instance, out tempVal))                        //Tries to parse a string to an int, if successful passes the int to the helper method
+                //Tries to parse a string to an int, if successful passes the int to the helper method
+                if (Double.TryParse(instance, out tempVal))                        
                 {
-                    if (operators.Count != 0)                                       //Checks if the operator is divides and if the divisor is 0, returns an error if true
+                    //Checks if the operator is divides and if the divisor is 0, returns an error if true
+                    if (operators.Count != 0)                                       
                     {
                         if (operators.Peek() == "/")
                         {
@@ -137,11 +281,13 @@ namespace SpreadsheetUtilities
 
                     performOperation(tempVal, values, operators);
                 }
-                else if (isVar(instance))                                       //Checks if the string is a valid variable, if true it uses the delegate to return an int value and pass it to the helper method
+                //Checks if the string is a valid variable, if true it uses the delegate to return an int value and pass it to the helper method
+                else if (isVar(instance))                                       
                 {
                     Double variableValue = lookup(instance);
 
-                    if (operators.Count != 0)                                       //Checks if the operator is divides and if the divisor is 0, returns an error if true
+                    //Checks if the operator is divides and if the divisor is 0, returns an error if true
+                    if (operators.Count != 0)                                       
                     {
                         if (operators.Peek() == "/")
                         {
@@ -154,20 +300,25 @@ namespace SpreadsheetUtilities
                     performOperation(variableValue, values, operators);
                 }
 
-                else if (instance == "*" || instance == "/")                    //Checks for the multiply and divide operators in the string, pushes to stack if true
+                //Checks for the multiply and divide operators in the string, pushes to stack if true
+                else if (instance == "*" || instance == "/")                    
                 {
                     operators.Push(instance);
                 }
 
-                else if (instance == "+" | instance == "-")                     //Checks for the add or subtract operator in the string
+                //Checks for the add or subtract operator in the string
+                else if (instance == "+" | instance == "-")                     
                 {
                     if (!(operators.Count == 0))
                     {
-                        if (operators.Peek() == "+" | operators.Peek() == "-")                                  //Performs the addition or subtraction if there are two valid values and one operator in the stacks
+                        //Performs the addition or subtraction if there are two valid values and one operator in the stacks
+                        if (operators.Peek() == "+" | operators.Peek() == "-")                                  
                         {
                             if (values.Count <= 1)
+                            {
                                 return new FormulaError("The expression is invalid, not enough values");
-
+                            }
+                                
                             secondStackValue = values.Pop();
                             firstStackValue = values.Pop();
                             String operation = operators.Pop();
@@ -179,21 +330,22 @@ namespace SpreadsheetUtilities
                             }
                             else
                                 tempVal = firstStackValue - secondStackValue;
-
                         }
-
                     }
                     operators.Push(instance);
                 }
 
-                else if (instance == "(")                                                   //Checks if the string contains a left parenthesis, if true pushes it to the operator stack
+                //This else if checks if the string contains a left parenthesis, if true pushes it to the operator stack
+                else if (instance == "(")                                                   
                 {
                     operators.Push(instance);
                 }
 
-                else if (instance == ")")                                                   //Checks if the string contains a right parenthesis
+                //This else if block checks if the string contains a right parenthesis
+                else if (instance == ")")                                                   
                 {
-                    if (operators.Peek() == "+" || operators.Peek() == "-")                 //Checks if the next operator in the stack is a + or - and performs the operation to the two most current values in the value stack
+                    //Checks if the next operator in the stack is a + or - and performs the operation to the two most current values in the value stack
+                    if (operators.Peek() == "+" || operators.Peek() == "-")                 
                     {
                         if (values.Count <= 1)
                             return new FormulaError("The expression is invalid, not enough values");
@@ -213,12 +365,14 @@ namespace SpreadsheetUtilities
                         }
                     }
 
-                    if (operators.Count == 0)                    //Checks if the operator stack is empty, throws an exception if true
+                    //Checks if the operator stack is empty, throws an exception if true
+                    if (operators.Count == 0)                    
                     {
                         return new FormulaError("There is a missing '(' in the expression");
                     }
 
-                    if (operators.Peek() != "(")                 //Checks if the operator stacks next operator is not a left parenthesis, throws an exception if true
+                    //Checks if the operator stacks next operator is not a left parenthesis, throws an exception if true
+                    if (operators.Peek() != "(")                 
                     {
                         return new FormulaError("There is a missing '(' in the expression");
                     }
@@ -227,7 +381,8 @@ namespace SpreadsheetUtilities
 
                     if (!(operators.Count == 0))
                     {
-                        if (operators.Peek() == "*" | operators.Peek() == "/")                          //Checks if the next operator is a * or a /, performs the operation on the stacks
+                        //Checks if the next operator is a * or a /, performs the operation on the stacks
+                        if (operators.Peek() == "*" | operators.Peek() == "/")                          
                         {
                             if (values.Count <= 1)
                                 return new FormulaError("The expression is invalid, not enough values");
@@ -253,13 +408,21 @@ namespace SpreadsheetUtilities
                         }
                     }
                 }
+
+                else
+                {
+                    return new FormulaError("The expression was given an incorrect variable format");
+                }
             }
 
-            if (values.Count == 1 && operators.Count == 0)                   //If there only exists one value on the value stack after the loop is finished, this is our answer
+            //If there only exists one value on the value stack after the loop is finished, this is our answer
+            if (values.Count == 1 && operators.Count == 0)                   
             {
                 return values.Pop();
             }
-            else if (values.Count == 2 && operators.Count == 1)              //If there only exists two values and one operator left on the stacks after the loop is finished, perform the operation and return the value that is our answer
+
+            //If there only exists two values and one operator left on the stacks after the loop is finished, perform the operation and return the value that is our answer
+            else if (values.Count == 2 && operators.Count == 1)             
             {
                 secondStackValue = values.Pop();
                 firstStackValue = values.Pop();
@@ -276,10 +439,10 @@ namespace SpreadsheetUtilities
 
             }
 
+            //If the conditions above are not met in the entire Evaluate class, then the formula given was not correctly input into the method
             else
             {
-                return new FormulaError("The expression given is likely invalid");            //If the conditions above are not met, then the formula given was not correctly input into the method
-
+                return new FormulaError("The expression given is likely invalid");            
             }
         }
 
@@ -292,10 +455,24 @@ namespace SpreadsheetUtilities
         private static Boolean isVar(String substringGiven)
         {
             string[] varSubString = Regex.Split(substringGiven, string.Empty);
-            if (Regex.IsMatch(substringGiven, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+            if (!(Regex.IsMatch(varSubString[1], @"^[a-zA-Z_]+$")))
+                return false;
+            if (Regex.IsMatch(substringGiven, @"^\w+$"))
             {
                 return true;
             }
+            return false;
+        }
+
+        /// <summary>
+        /// Helper method that returns a boolean depending on if the string given is an operator or not
+        /// </summary>
+        /// <param name="substringGiven">String needed to determine if it is an operator or not</param>
+        /// <returns></returns>
+        private static Boolean isOperator(String substringGiven)
+        {
+            if (substringGiven == "+" || substringGiven == "-" || substringGiven == "*" || substringGiven == "/")
+                return true;
             return false;
         }
 
@@ -390,7 +567,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override bool Equals(object obj)
         {
-            if(obj == null)
+            if (obj == null)
                 return false;
             if (obj.GetType() != this.GetType())
                 return false;
@@ -405,13 +582,13 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
-            if(Object.ReferenceEquals(f1, null) && Object.ReferenceEquals(f2, null)) 
+            if (Object.ReferenceEquals(f1, null) && Object.ReferenceEquals(f2, null))
                 return true;
 
-            if(!(Object.ReferenceEquals(f1, null)) && Object.ReferenceEquals(f2, null)) 
+            if (!(Object.ReferenceEquals(f1, null)) && Object.ReferenceEquals(f2, null))
                 return false;
 
-            if((Object.ReferenceEquals(f1, null)) && !(Object.ReferenceEquals(f2, null))) 
+            if ((Object.ReferenceEquals(f1, null)) && !(Object.ReferenceEquals(f2, null)))
                 return false;
 
             return f1.ToString().Equals(f2.ToString());
