@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SpreadsheetUtilities;
+using System.Text.RegularExpressions;
 
 namespace SS
 {
@@ -50,12 +51,13 @@ namespace SS
     /// A1 depends on B1, which depends on C1, which depends on A1.  That's a circular
     /// dependency.
     /// </summary>
-    
+
     public class Spreadsheet : AbstractSpreadsheet
     {
 
         private DependencyGraph dependency_graph;
         private Dictionary<String, Cell> cell;
+        private HashSet<String> dependents;
 
         /// <summary>
         /// Constructor for Spreadsheet with zero arguments
@@ -72,8 +74,9 @@ namespace SS
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
             //Foreach loops for returning each nonempty cell
-            foreach(KeyValuePair<String, Cell> entry in cell){
-                if (entry.Value.Contents != string.Empty)
+            foreach (KeyValuePair<String, Cell> entry in cell)
+            {
+                if (entry.Value.Contents != "")
                     yield return entry.Key;
             }
         }
@@ -85,8 +88,13 @@ namespace SS
         /// Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
         /// value should be either a string, a double, or a Formula.
         public override object GetCellContents(string name)
-        {                        
-            if(string.IsNullOrEmpty(name) || !Formula.(name))
+        {
+            if (string.IsNullOrEmpty(name) || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+                throw new InvalidNameException();
+
+            if (!cell.ContainsKey(name))
+                return "";
+            return cell[name].Contents;
 
         }
 
@@ -102,6 +110,21 @@ namespace SS
         /// set {A1, B1, C1} is returned.
         public override ISet<string> SetCellContents(string name, double number)
         {
+            if (name == null || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+                throw new InvalidNameException();
+
+            if (cell.ContainsKey(name))
+            {
+                cell[name].Contents = number;
+            }
+            else
+            {
+                cell.Add(name, new Cell(name, number));
+            }
+
+            dependents = new HashSet<string>(GetCellsToRecalculate(name));
+            dependents.Add(name);
+            return dependents;
         }
 
 
@@ -118,7 +141,23 @@ namespace SS
         /// set {A1, B1, C1} is returned.
         public override ISet<string> SetCellContents(string name, string text)
         {
-            throw new NotImplementedException();
+            if (text == null)
+                throw new ArgumentNullException();
+
+            if (name == null || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+                throw new InvalidNameException();
+
+            if (cell.ContainsKey(name))
+            {
+                cell[name].Contents = text;
+            }
+            else
+            {
+                cell.Add(name, new Cell(name, text));
+            }
+            dependents = new HashSet<string>(GetCellsToRecalculate(name));
+            dependents.Add(name);
+            return dependents;
         }
 
         /// <summary>
@@ -138,7 +177,13 @@ namespace SS
         /// </summary>
         public override ISet<string> SetCellContents(string name, Formula formula)
         {
-            throw new NotImplementedException();
+            if (formula == null)
+                throw new ArgumentNullException();
+
+            if (name == null || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+                throw new InvalidNameException();
+
+
         }
 
         /// <summary>
@@ -168,61 +213,27 @@ namespace SS
         /// </summary>
         private class Cell
         {
-            private String cell_string_contents, cell_string_value;         
-            private Double cell_double_contents, cell_double_value;
-            private Formula cell_formula_contents;
-            private Double cell_formula_value;
-
             /// <summary>
-            /// Creates a cell with String contents should a Cell be required to contain strings
+            /// Getter/Setter for Cell name
             /// </summary>
-            /// <param name="contents">The content provided used to create the Cell</param>
-            public Cell(String contents)
-            {
-                cell_string_contents = contents;
-                cell_string_value = contents;
-            }
-
-            public Cell(Object contents)
-            {
-                cell_contents = contents;
-                cell_value = contents;
-            }
+            public String Name { get; set; }
 
             /// <summary>
-            /// Creates a cell with Double contents should a Cell be required to contain doubles
-            /// </summary>
-            /// <param name="contents">The content provided used to create the Cell</param>
-            public Cell(Double contents)
-            {
-                cell_double_contents = contents;
-                cell_double_value = contents;
-            }
-
-            /// <summary>
-            /// Creates a cell with a Formula should a Cell be required to contain a Formula
-            /// </summary>
-            /// <param name="contents">The content provided used to create the Cell</param>
-            public Cell(Formula contents)
-            {
-                cell_formula_contents = contents;
-                cell_formula_value = (double)contents.Evaluate(lookup);
-            }
-
-            /// <summary>
-            /// Creates a lookup function so that a Formula Cell can find the value of its formula.
-            /// Currently the lookup function is undefined in the structure but will be for later use.
-            /// </summary>
-            /// <param name="formula"></param>
-            /// <returns></returns>
-            public double lookup(String formula)
-            {
-                return -1;
-            }
-            /// <summary>
-            /// Getter/Setter for retrieving the contents in the cell regardless of type
+            /// Getter/Setter for Cell contents
             /// </summary>
             public object Contents { get; set; }
+            /// <summary>
+            /// Cell constructor
+            /// </summary>
+            /// <param name="cell_name"> new cell name</param>
+            /// <param name="cell_contents">new cell contents</param>
+            public Cell(string cell_name, object cell_contents)
+            {
+                Name = cell_name;
+                Contents = cell_contents;
+            }
+
+
         }
     }
 }
