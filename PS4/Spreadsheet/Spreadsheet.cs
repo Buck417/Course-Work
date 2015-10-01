@@ -182,8 +182,27 @@ namespace SS
 
             if (name == null || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
                 throw new InvalidNameException();
+            if (cell.ContainsKey(name))
+            {
+                cell[name].Contents = formula;
+            }
+            else
+            {
+                cell.Add(name, new Cell(name, formula));
+            }
 
-
+            foreach (string var in formula.GetVariables())
+            {
+                try
+                {
+                    dependency_graph.AddDependency(var, name);
+                }
+                catch (InvalidOperationException)
+                {
+                    throw new CircularException();
+                }
+            }
+            return new HashSet<string>(GetCellsToRecalculate(name));
         }
 
         /// <summary>
@@ -205,7 +224,12 @@ namespace SS
         /// </summary>
         protected override IEnumerable<string> GetDirectDependents(string name)
         {
-            throw new NotImplementedException();
+            if (name == null)
+                throw new ArgumentNullException();
+
+            if (!Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+                throw new InvalidNameException();
+            return dependency_graph.GetDependents(name);
         }
 
         /// <summary>
