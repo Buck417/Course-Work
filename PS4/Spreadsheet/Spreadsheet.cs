@@ -89,7 +89,7 @@ namespace SS
         /// value should be either a string, a double, or a Formula.
         public override object GetCellContents(string name)
         {
-            if (string.IsNullOrEmpty(name) || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+            if (string.IsNullOrEmpty(name) || !Regex.IsMatch(name, @"^[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
                 throw new InvalidNameException();
 
             if (!cell.ContainsKey(name))
@@ -110,7 +110,7 @@ namespace SS
         /// set {A1, B1, C1} is returned.
         public override ISet<string> SetCellContents(string name, double number)
         {
-            if (name == null || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+            if (name == null || !Regex.IsMatch(name, @"^[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
                 throw new InvalidNameException();
 
             if (cell.ContainsKey(name))
@@ -144,7 +144,7 @@ namespace SS
             if (text == null)
                 throw new ArgumentNullException();
 
-            if (name == null || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+            if (name == null || !Regex.IsMatch(name, @"^[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
                 throw new InvalidNameException();
 
             if (cell.ContainsKey(name))
@@ -180,7 +180,7 @@ namespace SS
             if (formula == null)
                 throw new ArgumentNullException();
 
-            if (name == null || !Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+            if (name == null || !Regex.IsMatch(name, @"^[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
                 throw new InvalidNameException();
             if (cell.ContainsKey(name))
             {
@@ -227,7 +227,7 @@ namespace SS
             if (name == null)
                 throw new ArgumentNullException();
 
-            if (!Regex.IsMatch(name, @"[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
+            if (!Regex.IsMatch(name, @"^[a-zA-Z_](?: [a-zA-Z_]|\d)*"))
                 throw new InvalidNameException();
             return dependency_graph.GetDependents(name);
         }

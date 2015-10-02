@@ -201,22 +201,27 @@ namespace SS
         /// A helper for the GetCellsToRecalculate method.
         /// 
         ///   -- You should fully comment what is going on below --
+        ///   
+        /// Does a recursive foreach call into each directdependents hashset, checking for cycles and returning
+        /// and LinkedList of all cells that need to be changed when the cells are dependent on a cell
+        /// that was changed
+        /// 
         /// </summary>
         private void Visit(String start, String name, ISet<String> visited, LinkedList<String> changed)
         {
             visited.Add(name);
             foreach (String n in GetDirectDependents(name))
             {
-                if (n.Equals(start))
+                if (n.Equals(start))                            //If the next dependent points back to the previous dependent its a cycle and needs to throw an exception
                 {
                     throw new CircularException();
                 }
-                else if (!visited.Contains(n))
-                {
+                else if (!visited.Contains(n))                  //If the next dependent has not been visited, recursively set the dependent as being visited
+                {                                               //and checks its dependents
                     Visit(start, n, visited, changed);
                 }
             }
-            changed.AddFirst(name);
+            changed.AddFirst(name);                             //Returns list of what dependents are changed
         }
 
     }
