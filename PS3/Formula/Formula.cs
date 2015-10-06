@@ -12,7 +12,7 @@
 // Version 1.2 (9/24/2015 11:59 p.m.)
 
 //Change log:
-// (Version 1.2) Implemented the constructors and methods left undone
+// (Version 1.21) Implemented the constructors and methods left undone
 // Author: Ryan Fletcher
 
 using System;
