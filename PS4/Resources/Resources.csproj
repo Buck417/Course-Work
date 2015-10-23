@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Resources.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -36,9 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Libraries\Formula.dll" />
-    <Content Include="Libraries\Formula.XML" />
+    <Content Include="Libraries\Formulaold.XML" />
     <Content Include="Libraries\SpreadsheetUtilities.dll" />
-    <Content Include="Libraries\SpreadsheetUtilities.XML" />
+    <Content Include="Libraries\SpreadsheetUtilitiesold.XML" />
     <Content Include="README.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
