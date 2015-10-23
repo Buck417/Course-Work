@@ -84,7 +84,7 @@ namespace SS
         {
             dependency_graph = new DependencyGraph();
             cell = new Dictionary<String, Cell>();
-            Changed = false;
+            Changed = false;            //Test
         }
 
         /// <summary>
